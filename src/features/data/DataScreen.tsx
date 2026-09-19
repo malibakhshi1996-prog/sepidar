@@ -24,7 +24,7 @@ export function DataScreen({ data, onImport, onRestore, onBack }: {
   const exportData = async (format: 'json' | 'csv') => {
     setBusy(true); setError(false); setMessage('')
     try {
-      const saved = await saveFile(`sepidar-${new Date().toISOString().slice(0, 10)}.${format}`, format === 'json' ? 'application/json' : 'text/csv', format === 'json' ? exportBackup(data) : exportTasksCsv(data.tasks))
+      const saved = await saveFile(`zitar-${new Date().toISOString().slice(0, 10)}.${format}`, format === 'json' ? 'application/json' : 'text/csv', format === 'json' ? exportBackup(data) : exportTasksCsv(data.tasks))
       setMessage(saved ? 'خروجی آماده شد. فایل را در محل امن نگه دارید.' : 'ذخیرهٔ فایل لغو شد.')
     } catch { setError(true); setMessage('خروجی ذخیره نشد؛ فضای دستگاه و دسترسی فایل را بررسی کنید.') }
     finally { setBusy(false) }

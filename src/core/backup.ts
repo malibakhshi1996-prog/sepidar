@@ -3,7 +3,7 @@ import type { Habit, FocusSession } from './user-data.ts'
 import { parseJalaliKey } from './date.ts'
 
 export interface BackupData { tasks: Task[]; habits: Habit[]; focusSessions: FocusSession[]; activeTheme: string }
-export interface BackupEnvelope { format: 'sepidar-backup'; version: 1; exportedAt: string; data: BackupData }
+export interface BackupEnvelope { format: 'zitar-backup'; version: 1; exportedAt: string; data: BackupData }
 const fail = (): never => { throw new Error('فایل پشتیبان معتبر نیست یا نسخهٔ آن پشتیبانی نمی‌شود.') }
 const record = (value: unknown): Record<string, unknown> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : fail()
 const nonempty = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0
@@ -17,14 +17,14 @@ const textFields = (value: Record<string, unknown>, fields: string[]) => {
 }
 
 export function exportBackup(data: BackupData): string {
-  const backup: BackupEnvelope = { format: 'sepidar-backup', version: 1, exportedAt: new Date().toISOString(), data }
+  const backup: BackupEnvelope = { format: 'zitar-backup', version: 1, exportedAt: new Date().toISOString(), data }
   return JSON.stringify(backup, null, 2)
 }
 export function parseBackup(text: string): BackupData {
   if (text.length > 20 * 1024 * 1024) throw new Error('اندازهٔ فایل باید کمتر از ۲۰ مگابایت باشد.')
   let envelope: Record<string, unknown>
   try { envelope = record(JSON.parse(text)) } catch { return fail() }
-  if (envelope.format !== 'sepidar-backup' || envelope.version !== 1) return fail()
+  if (envelope.format !== 'zitar-backup' || envelope.version !== 1) return fail()
   const data = record(envelope.data)
   const tasks = checkCollection(data.tasks).map(task => {
     if (!nonempty(task.title) || !nonempty(task.list) || typeof task.completed !== 'boolean' || !['none', 'low', 'medium', 'high'].includes(String(task.priority))) fail()

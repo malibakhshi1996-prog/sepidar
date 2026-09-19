@@ -36,14 +36,14 @@ function deleteDatabase(): Promise<void> {
 test('legacy localStorage data migrates to IndexedDB on first launch', async () => {
   await deleteDatabase()
   storage.clear()
-  storage.setItem('sepidar.tasks', JSON.stringify([{ id: 'legacy', title: 'کار قدیمی' }]))
-  storage.setItem('sepidar.theme', 'turquoise')
+  storage.setItem('zitar.tasks', JSON.stringify([{ id: 'legacy', title: 'کار قدیمی' }]))
+  storage.setItem('zitar.theme', 'turquoise')
 
   const migrated = await loadAppSnapshot(defaults)
   assert.equal(migrated.tasks[0].id, 'legacy')
   assert.equal(migrated.activeTheme, 'turquoise')
 
-  storage.setItem('sepidar.tasks', JSON.stringify([{ id: 'changed-legacy', title: 'نباید جایگزین شود' }]))
+  storage.setItem('zitar.tasks', JSON.stringify([{ id: 'changed-legacy', title: 'نباید جایگزین شود' }]))
   const reopened = await loadAppSnapshot(defaults)
   assert.equal(reopened.tasks[0].id, 'legacy')
 })

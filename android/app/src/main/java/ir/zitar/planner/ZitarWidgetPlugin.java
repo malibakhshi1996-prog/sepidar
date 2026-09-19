@@ -1,4 +1,4 @@
-package ir.sepidar.productivity;
+package ir.zitar.planner;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -9,9 +9,9 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-@CapacitorPlugin(name = "SepidarWidget")
-public class SepidarWidgetPlugin extends Plugin {
-    private static final String PREFS = "sepidar_widget";
+@CapacitorPlugin(name = "ZitarWidget")
+public class ZitarWidgetPlugin extends Plugin {
+    private static final String PREFS = "zitar_widget";
     private static final String TASKS = "today_tasks";
 
     @PluginMethod
@@ -21,7 +21,7 @@ public class SepidarWidgetPlugin extends Plugin {
         // Keep only the small widget projection. The main task database remains in the app.
         SharedPreferences preferences = getContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         preferences.edit().putString(TASKS, tasks).apply();
-        SepidarTodayWidget.updateAll(getContext());
+        ZitarTodayWidget.updateAll(getContext());
         call.resolve();
     }
 

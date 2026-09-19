@@ -1,7 +1,7 @@
-export const APP_DATABASE_NAME = 'sepidar-offline'
+export const APP_DATABASE_NAME = 'zitar-offline'
 export const APP_DATABASE_VERSION = 1
 export const APP_STATE_SCHEMA_VERSION = 2
-const FALLBACK_KEY = 'sepidar.snapshot'
+const FALLBACK_KEY = 'zitar.snapshot'
 export class StorageError extends Error {}
 
 const APP_STATE_STORE = 'app_state'
@@ -43,12 +43,12 @@ export function legacySnapshot<TTask, THabit, TFocusSession>(
   storage: StorageReader,
 ): AppSnapshot<TTask, THabit, TFocusSession> {
   let activeTheme = defaults.activeTheme
-  try { activeTheme = storage.getItem('sepidar.theme') || defaults.activeTheme } catch { /* Keep the default when legacy storage is unavailable. */ }
+  try { activeTheme = storage.getItem('zitar.theme') || defaults.activeTheme } catch { /* Keep the default when legacy storage is unavailable. */ }
   return {
     schemaVersion: APP_STATE_SCHEMA_VERSION,
-    tasks: parseArray(storage, 'sepidar.tasks', defaults.tasks),
-    habits: parseArray(storage, 'sepidar.habits', defaults.habits),
-    focusSessions: parseArray(storage, 'sepidar.focusSessions', defaults.focusSessions),
+    tasks: parseArray(storage, 'zitar.tasks', defaults.tasks),
+    habits: parseArray(storage, 'zitar.habits', defaults.habits),
+    focusSessions: parseArray(storage, 'zitar.focusSessions', defaults.focusSessions),
     activeTheme,
     updatedAt: new Date().toISOString(),
   }

@@ -68,6 +68,98 @@ export const jalaliViewLabel = (anchor: JalaliDateValue, view: JalaliCalendarVie
 }
 export const jalaliLabel = (value: JalaliDateValue) => `${faDigits(value.day)} ${jalaliMonthNames[value.month - 1]} ${faDigits(value.year)}`
 export const jalaliShortLabel = (value: JalaliDateValue) => `${faDigits(value.day)} ${jalaliMonthNames[value.month - 1]}`
+
+export const gregorianMonthNames = ['ژانویه', 'فوریه', 'مارس', 'آوریل', 'مه', 'ژوئن', 'ژوئیه', 'اوت', 'سپتامبر', 'اکتبر', 'نوامبر', 'دسامبر']
+export const hijriMonthNames = ['محرم', 'صفر', 'ربیع‌الاول', 'ربیع‌الثانی', 'جمادی‌الاول', 'جمادی‌الثانی', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذیقعده', 'ذیحجه']
+
+const gregorianDateForJalali = (value: JalaliDateValue) => {
+  const result = toGregorian(value.year, value.month, value.day)
+  return new Date(Date.UTC(result.gy, result.gm - 1, result.gd, 12))
+}
+
+const hijriPartsForGregorian = (value: { year: number; month: number; day: number }) => {
+  const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura-nu-latn', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }).formatToParts(new Date(Date.UTC(value.year, value.month - 1, value.day, 12)))
+  const part = (name: string) => Number(parts.find(item => item.type === name)?.value || 0)
+  return { year: part('year'), month: part('month'), day: part('day') }
+}
+
+export const gregorianForJalali = (value: JalaliDateValue) => {
+  const result = toGregorian(value.year, value.month, value.day)
+  return { year: result.gy, month: result.gm, day: result.gd }
+}
+
+export const jalaliForGregorian = (value: { year: number; month: number; day: number }): JalaliDateValue => {
+  const result = toJalaali(value.year, value.month, value.day)
+  return { year: result.jy, month: result.jm, day: result.jd }
+}
+
+const calendarLabel = (value: JalaliDateValue, calendar: 'gregory' | 'islamic-umalqura') => {
+  try {
+    return new Intl.DateTimeFormat(`fa-IR-u-ca-${calendar}-nu-latn`, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(gregorianDateForJalali(value)).replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+  } catch {
+    return ''
+  }
+}
+
+export const gregorianLabelForJalali = (value: JalaliDateValue) => calendarLabel(value, 'gregory')
+export const hijriLabelForJalali = (value: JalaliDateValue) => calendarLabel(value, 'islamic-umalqura')
+
+const islamicToJulianDay = (year: number, month: number, day: number) => day + Math.ceil(29.5 * (month - 1)) + (year - 1) * 354 + Math.floor((3 + 11 * year) / 30) + 1948439 - 1
+const julianDayToGregorian = (julianDay: number) => {
+  const j = julianDay + 0.5
+  const z = Math.floor(j)
+  const a = z < 2299161 ? z : (() => { const alpha = Math.floor((z - 1867216.25) / 36524.25); return z + 1 + alpha - Math.floor(alpha / 4) })()
+  const b = a + 1524
+  const c = Math.floor((b - 122.1) / 365.25)
+  const d = Math.floor(365.25 * c)
+  const e = Math.floor((b - d) / 30.6001)
+  const day = b - d - Math.floor(30.6001 * e)
+  const month = e < 14 ? e - 1 : e - 13
+  const year = month > 2 ? c - 4716 : c - 4715
+  return { year, month, day }
+}
+
+export const gregorianForHijri = (value: { year: number; month: number; day: number }) => julianDayToGregorian(islamicToJulianDay(value.year, value.month, value.day))
+export const jalaliForHijri = (value: { year: number; month: number; day: number }) => jalaliForGregorian(gregorianForHijri(value))
+
+export const formatCalendarInput = (value: JalaliDateValue, system: CalendarSystem) => {
+  if (system === 'JALALI') return `${value.year}/${String(value.month).padStart(2, '0')}/${String(value.day).padStart(2, '0')}`
+  if (system === 'GREGORIAN') {
+    const date = gregorianForJalali(value)
+    return `${date.year}/${String(date.month).padStart(2, '0')}/${String(date.day).padStart(2, '0')}`
+  }
+  const parts = hijriPartsForGregorian(gregorianForJalali(value))
+  const part = (name: 'year' | 'month' | 'day') => parts[name]
+  return `${part('year')}/${String(part('month')).padStart(2, '0')}/${String(part('day')).padStart(2, '0')}`
+}
+
+export const parseCalendarInput = (input: string, system: CalendarSystem): JalaliDateValue | null => {
+  const normalized = latinDigits(input).trim().replace(/[٫۔،.\-]/g, '/').replace(/\s+/g, '')
+  const match = normalized.match(/^(\d{3,4})\/(\d{1,2})\/(\d{1,2})$/)
+  if (!match) return null
+  const value = { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) }
+  if (system === 'JALALI') return isValidJalaaliDate(value.year, value.month, value.day) ? value : null
+  if (system === 'GREGORIAN') {
+    const date = new Date(Date.UTC(value.year, value.month - 1, value.day, 12))
+    if (date.getUTCFullYear() !== value.year || date.getUTCMonth() + 1 !== value.month || date.getUTCDate() !== value.day) return null
+    return jalaliForGregorian(value)
+  }
+  if (value.month < 1 || value.month > 12 || value.day < 1 || value.day > 30 || value.year < 1) return null
+  const approximate = gregorianForHijri(value)
+  for (let offset = -4; offset <= 4; offset += 1) {
+    const candidate = new Date(Date.UTC(approximate.year, approximate.month - 1, approximate.day + offset, 12))
+    const greg = { year: candidate.getUTCFullYear(), month: candidate.getUTCMonth() + 1, day: candidate.getUTCDate() }
+    const parts = hijriPartsForGregorian(greg)
+    if (parts.year === value.year && parts.month === value.month && parts.day === value.day) return jalaliForGregorian(greg)
+  }
+  return jalaliForHijri(value)
+}
+
+export const calendarLabelsForJalali = (value: JalaliDateValue) => ({
+  jalali: jalaliLabel(value),
+  gregorian: gregorianLabelForJalali(value),
+  hijri: hijriLabelForJalali(value),
+})
 export const jalaliAtToDate = (key: string, time: string, timezone = 'Asia/Tehran'): Date | null => {
   const value = parseJalaliKey(key)
   const match = latinDigits(time).match(/^(\d{1,2}):(\d{2})$/)

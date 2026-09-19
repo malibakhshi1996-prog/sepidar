@@ -1,6 +1,6 @@
-# سپیدار — Persian-first productivity suite
+# زیتر | برنامه‌ریزی هوشمند
 
-An independent Persian-first productivity app in active development. Current milestone: 0.7.0 (offline task hardening). This is not yet TickTick feature parity or a production release.
+An independent Persian-first productivity app in active development. Current milestone: 0.9.0 (Zitar rebrand and Android integration).
 
 ```bash
 npm ci
@@ -21,9 +21,9 @@ npm run mobile:build:debug
 
 After a successful build, the debug APK is generated at `android/app/build/outputs/apk/debug/app-debug.apk`. This path is not evidence that an APK currently exists.
 
-The Android target is version `0.7.0` (`ir.sepidar.productivity`). Native notifications and document export still require Android device verification. `mobile:build:release` produces an **unsigned** release unless signing is configured separately; do not distribute it as a signed production release or commit keystore secrets.
+The Android target is version `0.9.0` (`ir.zitar.planner`). Native notifications, calendar insertion and document export still require Android device verification. `mobile:build:release` produces an **unsigned** release unless signing is configured separately; do not distribute it as a signed production release or commit keystore secrets.
 
-Build attempts in this workspace failed at downloading Gradle (`Network is unreachable`); JDK 21 and Android SDK are also missing. **No APK was generated.**
+The local build may fail if the Gradle distribution is not cached; GitHub Actions is the reproducible APK build path.
 
 ## Current capabilities
 

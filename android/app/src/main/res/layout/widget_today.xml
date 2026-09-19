@@ -19,8 +19,8 @@
         android:gravity="right"
         android:fontFamily="sans" />
 
-    <TextView android:id="@+id/widget_task_1" style="@style/SepidarWidgetTask" />
-    <TextView android:id="@+id/widget_task_2" style="@style/SepidarWidgetTask" />
-    <TextView android:id="@+id/widget_task_3" style="@style/SepidarWidgetTask" />
-    <TextView android:id="@+id/widget_task_4" style="@style/SepidarWidgetTask" />
+    <TextView android:id="@+id/widget_task_1" style="@style/ZitarWidgetTask" />
+    <TextView android:id="@+id/widget_task_2" style="@style/ZitarWidgetTask" />
+    <TextView android:id="@+id/widget_task_3" style="@style/ZitarWidgetTask" />
+    <TextView android:id="@+id/widget_task_4" style="@style/ZitarWidgetTask" />
 </LinearLayout>

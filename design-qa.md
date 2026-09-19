@@ -1,4 +1,4 @@
-# Sepidar visual QA
+# Zitar visual QA
 
 Date: 2026-09-19
 

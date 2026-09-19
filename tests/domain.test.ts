@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { addJalaliDays, addJalaliMonths, calendarCells, formatJalaliInput, todayJalali, jalaliAtToDate, jalaliKey, jalaliWeekday, moveJalaliCalendar, parseJalaliInput, parseNaturalDateValue } from '../src/core/date.ts'
+import { addJalaliDays, addJalaliMonths, calendarCells, calendarLabelsForJalali, formatCalendarInput, formatJalaliInput, parseCalendarInput, todayJalali, jalaliAtToDate, jalaliKey, jalaliWeekday, moveJalaliCalendar, parseJalaliInput, parseNaturalDateValue } from '../src/core/date.ts'
+import { eventsForJalaliDate } from '../src/core/events.ts'
 import { parseQuickAdd } from '../src/core/nlp.ts'
 import { parseRecurrence, nextOccurrence } from '../src/core/recurrence.ts'
 import { matchesPersianQuery } from '../src/core/search.ts'
@@ -29,6 +30,20 @@ test('Iran today and notification time are independent of host timezone', () => 
   assert.equal(jalaliAtToDate('1405-06-27', '٢٣:٥٩')?.toISOString(), '2026-09-18T20:29:00.000Z')
   for (const time of ['25:00', '10:99', 'bad']) assert.equal(jalaliAtToDate('1405-06-27', time), null)
   assert.equal(jalaliAtToDate('1400-12-30', '09:00'), null)
+})
+test('one deadline can be entered and displayed in all three calendars', () => {
+  const value = { year: 1405, month: 6, day: 27 }
+  for (const system of ['JALALI', 'GREGORIAN', 'HIJRI'] as const) assert.deepEqual(parseCalendarInput(formatCalendarInput(value, system), system), value)
+  const labels = calendarLabelsForJalali(value)
+  assert.ok(labels.jalali.includes('شهریور'))
+  assert.ok(labels.gregorian.length > 6)
+  assert.ok(labels.hijri.length > 6)
+})
+test('offline calendar includes official, historic and moving religious events', () => {
+  assert.ok(eventsForJalaliDate({ year: 1405, month: 1, day: 1 }).some(event => event.title.includes('نوروز')))
+  assert.ok(eventsForJalaliDate({ year: 1405, month: 3, day: 3 }).some(event => event.title.includes('خرمشهر')))
+  const mabath = parseCalendarInput('۱۴۴۷/۰۷/۲۷', 'HIJRI')
+  assert.ok(mabath && eventsForJalaliDate(mabath).some(event => event.title.includes('مبعث')))
 })
 test('weekday parsing matches Thursday and Sunday, not the substring Saturday', () => {
   assert.equal(jalaliWeekday(parseNaturalDateValue('پنجشنبه', now)!.value), 5)

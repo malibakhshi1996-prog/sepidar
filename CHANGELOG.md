@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0 — Zitar brand and Android package
+
+- Renamed the product to «زیتر | برنامه‌ریزی هوشمند».
+- Changed the Android application ID to `ir.zitar.planner` because earlier builds were experimental.
+- Applied the supplied Zitar logo to the launcher, round launcher, notification and web favicon assets.
+- Renamed native calendar/widget plugins and local storage/backup namespaces to Zitar.
+
 ## 0.7.0 — Task lifecycle, safe recovery and export
 
 - Added a UI-connected task domain with status, version, local sync metadata, tombstones and restore.
@@ -17,7 +24,7 @@
 
 ## 0.6.0 — Android target and durable offline repository
 
-- Added a Capacitor Android target with the independent `ir.sepidar.productivity` application ID.
+- Added a Capacitor Android target with the independent `ir.zitar.planner` application ID.
 - Added native Android notification-channel setup and local task reminder scheduling.
 - Added an independent launcher/notification icon and required Android permissions.
 - Replaced direct UI persistence with an IndexedDB repository and a versioned app snapshot.

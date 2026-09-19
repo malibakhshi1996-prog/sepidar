@@ -1,4 +1,4 @@
-# سپیدار — گزارش Phase 0 تا Phase 5
+# زیتر — گزارش Phase 0 تا Phase 5
 
 > گزارش تاریخی است. وضعیت فعلی و اصلاح ادعاهای آمادگی در [گزارش ۰.۷](milestone-0.7.md) آمده است. تنظیمات نمایشی، همگام‌سازی، سرور مناسبت‌ها و APK هنوز کامل یا تأییدشده نیستند؛ عنوان READY در جدول قدیمی معیار پذیرش فعلی نیست.
 
@@ -184,4 +184,4 @@ Task دارای reminder flag شد و برای Taskهای دارای تاریخ 
 
 ## 25. تغییرات نسخه ۰.۶.۰
 
-هدف Android با Capacitor و شناسه مستقل `ir.sepidar.productivity` ایجاد شد. زمان‌بندی reminder در محیط Native از Local Notifications استفاده می‌کند و مجوزها، channel و آیکون اعلان مستقل دارد. Persistence مستقیم UI به Repository مبتنی بر IndexedDB منتقل شد؛ snapshot دارای schema version است و داده‌های قبلی localStorage را در اولین اجرا مهاجرت می‌دهد. localStorage صرفاً fallback/mirror سازگاری است. build وب، sync Android و هفت تست دامنه/مهاجرت موفق‌اند؛ تولید فایل APK همچنان نیازمند Android SDK، Build Tools و Gradle قابل دسترس است.
+هدف Android با Capacitor و شناسه مستقل `ir.zitar.planner` ایجاد شد. زمان‌بندی reminder در محیط Native از Local Notifications استفاده می‌کند و مجوزها، channel و آیکون اعلان مستقل دارد. Persistence مستقیم UI به Repository مبتنی بر IndexedDB منتقل شد؛ snapshot دارای schema version است و داده‌های قبلی localStorage را در اولین اجرا مهاجرت می‌دهد. localStorage صرفاً fallback/mirror سازگاری است. build وب، sync Android و هفت تست دامنه/مهاجرت موفق‌اند؛ تولید فایل APK همچنان نیازمند Android SDK، Build Tools و Gradle قابل دسترس است.

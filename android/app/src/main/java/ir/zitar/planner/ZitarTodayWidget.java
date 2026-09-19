@@ -1,4 +1,4 @@
-package ir.sepidar.productivity;
+package ir.zitar.planner;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -12,7 +12,7 @@ import android.widget.RemoteViews;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class SepidarTodayWidget extends AppWidgetProvider {
+public class ZitarTodayWidget extends AppWidgetProvider {
     private static final int[] ROWS = {R.id.widget_task_1, R.id.widget_task_2, R.id.widget_task_3, R.id.widget_task_4};
 
     @Override
@@ -28,7 +28,7 @@ public class SepidarTodayWidget extends AppWidgetProvider {
 
     static void updateAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        ComponentName component = new ComponentName(context, SepidarTodayWidget.class);
+        ComponentName component = new ComponentName(context, ZitarTodayWidget.class);
         for (int id : manager.getAppWidgetIds(component)) update(context, manager, id);
     }
 
@@ -39,7 +39,7 @@ public class SepidarTodayWidget extends AppWidgetProvider {
             views.setViewVisibility(row, View.GONE);
         }
         try {
-            JSONArray tasks = new JSONArray(SepidarWidgetPlugin.readTasks(context));
+            JSONArray tasks = new JSONArray(ZitarWidgetPlugin.readTasks(context));
             for (int i = 0; i < Math.min(tasks.length(), ROWS.length); i++) {
                 JSONObject task = tasks.optJSONObject(i);
                 if (task == null) continue;

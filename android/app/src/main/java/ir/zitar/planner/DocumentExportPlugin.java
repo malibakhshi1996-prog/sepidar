@@ -1,4 +1,4 @@
-package ir.sepidar.productivity;
+package ir.zitar.planner;
 
 import android.app.Activity;
 import android.content.Intent;

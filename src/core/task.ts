@@ -1,4 +1,5 @@
 import type { SyncState, TaskStatus } from './model'
+import type { CalendarSystem } from './date'
 
 export type TaskPriority = 'none' | 'low' | 'medium' | 'high'
 export type MatrixQuadrant = 'urgent-important' | 'not-urgent-important' | 'urgent-unimportant' | 'not-urgent-unimportant'
@@ -12,6 +13,7 @@ export interface Task {
   completedAt?: string
   date?: string
   dateKey?: string
+  dateSystem?: CalendarSystem
   time?: string
   reminder?: boolean
   duration?: number
@@ -34,6 +36,8 @@ export interface Task {
   recurrenceSourceId?: string
   recurrenceMode?: 'SCHEDULED_DATE' | 'COMPLETION_DATE'
   matrixQuadrant?: MatrixQuadrant
+  syncCalendar?: boolean
+  calendarEventId?: string
 }
 export type LegacyTask = Pick<Task, 'id' | 'title' | 'list' | 'priority' | 'completed'> & Partial<Task>
 const statuses: TaskStatus[] = ['OPEN', 'COMPLETED', 'CANCELLED', 'ARCHIVED']
