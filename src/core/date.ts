@@ -2,6 +2,12 @@ export type CalendarSystem = 'JALALI' | 'GREGORIAN' | 'HIJRI'
 import { isLeapJalaaliYear, isValidJalaaliDate, toGregorian, toJalaali } from 'jalaali-js'
 
 export interface JalaliDateValue { year: number; month: number; day: number }
+export type JalaliCalendarView = 'day' | 'week' | 'month'
+export interface JalaliCalendarCell extends JalaliDateValue {
+  key: string
+  inRange: boolean
+  weekday: number
+}
 export const jalaliMonthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
 export const jalaliWeekdayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه']
 const faDigits = (value: string | number) => String(value).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)])
@@ -19,6 +25,46 @@ export const parseJalaliKey = (key: string): JalaliDateValue | null => {
   if (!match) return null
   const value = { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) }
   return isValidJalaaliDate(value.year, value.month, value.day) ? value : null
+}
+export const formatJalaliInput = (value: JalaliDateValue) => `${faDigits(value.year)}/${faDigits(String(value.month).padStart(2, '0'))}/${faDigits(String(value.day).padStart(2, '0'))}`
+export const parseJalaliInput = (input: string): JalaliDateValue | null => {
+  const normalized = latinDigits(input).trim().replace(/[٫۔،]/g, '/').replace(/[.\-]/g, '/').replace(/\s+/g, '')
+  const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/)
+  if (!match) return null
+  const value = { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) }
+  return isValidJalaaliDate(value.year, value.month, value.day) ? value : null
+}
+export const calendarRange = (anchor: JalaliDateValue, view: JalaliCalendarView) => {
+  if (view === 'day') return { from: anchor, to: anchor }
+  if (view === 'week') {
+    const from = addJalaliDays(anchor, -jalaliWeekday(anchor))
+    return { from, to: addJalaliDays(from, 6) }
+  }
+  const from = addJalaliDays({ year: anchor.year, month: anchor.month, day: 1 }, -jalaliWeekday({ year: anchor.year, month: anchor.month, day: 1 }))
+  return { from, to: addJalaliDays(from, 41) }
+}
+export const calendarCells = (anchor: JalaliDateValue, view: JalaliCalendarView): JalaliCalendarCell[] => {
+  const range = calendarRange(anchor, view)
+  const count = view === 'day' ? 1 : view === 'week' ? 7 : 42
+  return Array.from({ length: count }, (_, index) => {
+    const value = addJalaliDays(range.from, index)
+    const inRange = view !== 'month' || (value.year === anchor.year && value.month === anchor.month)
+    return { ...value, key: jalaliKey(value), inRange, weekday: jalaliWeekday(value) }
+  })
+}
+export const moveJalaliCalendar = (anchor: JalaliDateValue, view: JalaliCalendarView, amount: number) => {
+  if (view === 'day') return addJalaliDays(anchor, amount)
+  if (view === 'week') return addJalaliDays(anchor, amount * 7)
+  return addJalaliMonths({ ...anchor, day: 1 }, amount)
+}
+export const jalaliViewLabel = (anchor: JalaliDateValue, view: JalaliCalendarView) => {
+  if (view === 'day') return jalaliLabel(anchor)
+  if (view === 'week') {
+    const range = calendarRange(anchor, 'week')
+    if (range.from.year === range.to.year && range.from.month === range.to.month) return `${faDigits(range.from.day)} تا ${faDigits(range.to.day)} ${jalaliMonthNames[range.from.month - 1]} ${faDigits(range.from.year)}`
+    return `${jalaliShortLabel(range.from)} تا ${jalaliLabel(range.to)}`
+  }
+  return `${jalaliMonthNames[anchor.month - 1]} ${faDigits(anchor.year)}`
 }
 export const jalaliLabel = (value: JalaliDateValue) => `${faDigits(value.day)} ${jalaliMonthNames[value.month - 1]} ${faDigits(value.year)}`
 export const jalaliShortLabel = (value: JalaliDateValue) => `${faDigits(value.day)} ${jalaliMonthNames[value.month - 1]}`

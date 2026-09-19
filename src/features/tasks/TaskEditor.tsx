@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, CalendarBlank, Check, Trash, X } from '@phosphor-icons/react'
 import { addJalaliDays, addJalaliMonths, jalaliKey, jalaliLabel, jalaliMonthNames, jalaliShortLabel, jalaliWeekday, jalaliWeekdayNames, parseJalaliKey, todayJalali } from '../../core/date'
-import type { Task, TaskPriority } from '../../core/task'
+import { matrixQuadrantForPriority, type MatrixQuadrant, type Task, type TaskPriority } from '../../core/task'
 
 const latin = (text: string) => text.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
 const fa = (value: number) => value.toLocaleString('fa-IR', { useGrouping: false })
@@ -46,6 +46,7 @@ export function TaskEditor({ task, lists, onClose, onSave, onDelete }: {
       {time && !selectedDate && <p role="alert">برای تعیین ساعت، تاریخ را هم انتخاب کنید.</p>}
       <label className="editor-check"><input type="checkbox" checked={!!draft.reminder && !!selectedDate && !!time} disabled={!selectedDate || !time} onChange={e => patch({ reminder: e.target.checked })}/> یادآوری در زمان کار (نیازمند مجوز اعلان)</label>
       <div className="editor-fields"><label className="editor-field">تکرار<select value={draft.recurrence || ''} onChange={e => patch({ recurrence: e.target.value })}>{repeatOptions.map(rule => <option key={rule} value={rule}>{rule || 'بدون تکرار'}</option>)}</select></label><label className="editor-field">اولویت<select value={draft.priority} onChange={e => patch({ priority: e.target.value as TaskPriority })}><option value="none">بدون اولویت</option><option value="low">کم</option><option value="medium">متوسط</option><option value="high">زیاد</option></select></label></div>
+      <label className="editor-field">ربع ماتریس آیزنهاور<select value={draft.matrixQuadrant || matrixQuadrantForPriority(draft.priority)} onChange={e => patch({ matrixQuadrant: e.target.value as MatrixQuadrant })}><option value="urgent-important">فوری و مهم</option><option value="not-urgent-important">مهم و غیرفوری</option><option value="urgent-unimportant">فوری و کم‌اهمیت</option><option value="not-urgent-unimportant">غیرفوری و کم‌اهمیت</option></select></label>
       <label className="editor-field">فهرست<input list="task-lists" required value={draft.list} onChange={e => patch({ list: e.target.value })}/><datalist id="task-lists">{lists.map(list => <option key={list} value={list}/>)}</datalist></label>
       <label className="editor-field">برچسب<input value={draft.tag || ''} onChange={e => patch({ tag: e.target.value })}/></label>
       <label className="editor-field">یادداشت<textarea className="detail-note" value={draft.note || ''} onChange={e => patch({ note: e.target.value })}/></label>

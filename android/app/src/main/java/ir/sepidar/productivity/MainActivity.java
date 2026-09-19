@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(DocumentExportPlugin.class);
+        registerPlugin(SepidarWidgetPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

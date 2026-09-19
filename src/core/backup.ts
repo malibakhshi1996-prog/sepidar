@@ -56,7 +56,7 @@ export function parseBackup(text: string): BackupData {
     textFields(session, ['taskId'])
     return session as unknown as FocusSession
   })
-  if (typeof data.activeTheme !== 'string' || !['default', 'turquoise', 'peach', 'pebble'].includes(data.activeTheme)) fail()
+  if (typeof data.activeTheme !== 'string' || !['default', 'dark', 'light', 'system', 'turquoise', 'peach', 'pebble', 'spring', 'summer', 'autumn', 'winter'].includes(data.activeTheme)) fail()
   return { tasks, habits, focusSessions, activeTheme: data.activeTheme as string }
 }
 

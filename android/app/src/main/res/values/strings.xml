@@ -4,4 +4,5 @@
     <string name="title_activity_main">سپیدار</string>
     <string name="package_name">ir.sepidar.productivity</string>
     <string name="custom_url_scheme">ir.sepidar.productivity</string>
+    <string name="widget_today_description">ویجت کارهای امروز سپیدار</string>
 </resources>

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { addJalaliDays, addJalaliMonths, todayJalali, jalaliAtToDate, jalaliKey, jalaliWeekday, parseNaturalDateValue } from '../src/core/date.ts'
+import { addJalaliDays, addJalaliMonths, calendarCells, formatJalaliInput, todayJalali, jalaliAtToDate, jalaliKey, jalaliWeekday, moveJalaliCalendar, parseJalaliInput, parseNaturalDateValue } from '../src/core/date.ts'
 import { parseQuickAdd } from '../src/core/nlp.ts'
 import { parseRecurrence, nextOccurrence } from '../src/core/recurrence.ts'
 import { matchesPersianQuery } from '../src/core/search.ts'
@@ -10,6 +10,18 @@ test('Jalali leap and non-leap Esfand rolls into Farvardin', () => {
   assert.equal(jalaliKey(addJalaliDays({ year: 1400, month: 12, day: 29 }, 1)), '1401-01-01')
   assert.equal(jalaliKey(addJalaliDays({ year: 1405, month: 6, day: 31 }, 1)), '1405-07-01')
   assert.equal(jalaliKey(addJalaliMonths({ year: 1405, month: 7, day: 30 }, -1)), '1405-06-30')
+})
+test('Vilia-style calendar range is Saturday-first and accepts Persian date input', () => {
+  const anchor = { year: 1405, month: 6, day: 27 }
+  assert.deepEqual(parseJalaliInput('۱۴۰۵/۰۶/۲۷'), anchor)
+  assert.deepEqual(parseJalaliInput('1405-6-27'), anchor)
+  assert.equal(formatJalaliInput(anchor), '۱۴۰۵/۰۶/۲۷')
+  const month = calendarCells(anchor, 'month')
+  assert.equal(month.length, 42)
+  assert.equal(month[0].weekday, 0)
+  assert.equal(month[0].key, '1405-05-31')
+  assert.equal(calendarCells(anchor, 'week').length, 7)
+  assert.equal(jalaliKey(moveJalaliCalendar(anchor, 'week', 1)), '1405-07-03')
 })
 test('Iran today and notification time are independent of host timezone', () => {
   assert.equal(jalaliKey(todayJalali(new Date('2026-09-18T21:00:00Z'))), '1405-06-28')

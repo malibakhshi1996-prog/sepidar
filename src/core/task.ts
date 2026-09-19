@@ -1,6 +1,7 @@
 import type { SyncState, TaskStatus } from './model'
 
 export type TaskPriority = 'none' | 'low' | 'medium' | 'high'
+export type MatrixQuadrant = 'urgent-important' | 'not-urgent-important' | 'urgent-unimportant' | 'not-urgent-unimportant'
 export interface Task {
   id: string
   title: string
@@ -32,6 +33,7 @@ export interface Task {
   projectId?: string
   recurrenceSourceId?: string
   recurrenceMode?: 'SCHEDULED_DATE' | 'COMPLETION_DATE'
+  matrixQuadrant?: MatrixQuadrant
 }
 export type LegacyTask = Pick<Task, 'id' | 'title' | 'list' | 'priority' | 'completed'> & Partial<Task>
 const statuses: TaskStatus[] = ['OPEN', 'COMPLETED', 'CANCELLED', 'ARCHIVED']
@@ -80,6 +82,7 @@ export function restoreTask(task: Task, now = new Date().toISOString()): Task {
 }
 export const isVisibleTask = (task: Task) => !task.deletedAt && task.status !== 'ARCHIVED' && task.status !== 'CANCELLED'
 export type TaskView = 'today' | 'inbox' | 'upcoming' | 'all' | 'completed'
+export const matrixQuadrantForPriority = (priority: TaskPriority): MatrixQuadrant => priority === 'high' ? 'urgent-important' : priority === 'medium' ? 'not-urgent-important' : priority === 'low' ? 'urgent-unimportant' : 'not-urgent-unimportant'
 export function selectTasks(tasks: Task[], view: TaskView, today: string): Task[] {
   return tasks.filter(isVisibleTask).filter(task => {
     if (view === 'completed') return task.completed
