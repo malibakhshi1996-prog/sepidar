@@ -34,7 +34,7 @@ public class ZitarTodayWidget extends AppWidgetProvider {
 
     private static void update(Context context, AppWidgetManager manager, int id) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_today);
-        views.setTextViewText(R.id.widget_title, "کارهای امروز");
+        views.setTextViewText(R.id.widget_title, "کارهای امروز زیتر");
         for (int row : ROWS) {
             views.setViewVisibility(row, View.GONE);
         }

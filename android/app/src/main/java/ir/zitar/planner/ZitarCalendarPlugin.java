@@ -3,7 +3,6 @@ package ir.zitar.planner;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.pm.PackageManager;
 import android.provider.CalendarContract;
 import android.database.Cursor;
 
@@ -15,9 +14,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
-import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 @CapacitorPlugin(name = "ZitarCalendar", permissions = {
     @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR })
@@ -64,6 +61,48 @@ public class ZitarCalendarPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("eventId", Long.parseLong(uri.getLastPathSegment()));
         call.resolve(result);
+    }
+
+    @PluginMethod
+    public void updateEvent(PluginCall call) {
+        if (!hasPermission(Manifest.permission.WRITE_CALENDAR)) {
+            call.reject("CALENDAR_PERMISSION_REQUIRED");
+            return;
+        }
+        Long eventId = call.getLong("eventId", -1L);
+        if (eventId == null || eventId < 1L) { call.reject("شناسهٔ رویداد معتبر نیست."); return; }
+        ContentValues values = eventValues(call);
+        int updated = getContext().getContentResolver().update(
+                android.content.ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
+                values, null, null);
+        if (updated < 1) call.reject("رویداد تقویم گوشی پیدا نشد."); else call.resolve();
+    }
+
+    @PluginMethod
+    public void deleteEvent(PluginCall call) {
+        if (!hasPermission(Manifest.permission.WRITE_CALENDAR)) {
+            call.reject("CALENDAR_PERMISSION_REQUIRED");
+            return;
+        }
+        Long eventId = call.getLong("eventId", -1L);
+        if (eventId == null || eventId < 1L) { call.reject("شناسهٔ رویداد معتبر نیست."); return; }
+        int deleted = getContext().getContentResolver().delete(
+                android.content.ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
+                null, null);
+        if (deleted < 1) call.reject("رویداد تقویم گوشی پیدا نشد."); else call.resolve();
+    }
+
+    private ContentValues eventValues(PluginCall call) {
+        long start = call.getLong("startAt", 0L);
+        long end = call.getLong("endAt", start + 30 * 60_000L);
+        ContentValues values = new ContentValues();
+        values.put(CalendarContract.Events.TITLE, call.getString("title", "زیتر"));
+        values.put(CalendarContract.Events.DESCRIPTION, call.getString("description", ""));
+        values.put(CalendarContract.Events.DTSTART, start);
+        values.put(CalendarContract.Events.DTEND, Math.max(end, start + 60_000L));
+        values.put(CalendarContract.Events.EVENT_TIMEZONE, ZoneId.systemDefault().getId());
+        values.put(CalendarContract.Events.ALL_DAY, call.getBoolean("allDay", false) ? 1 : 0);
+        return values;
     }
 
     private Long writableCalendarId(ContentResolver resolver) {

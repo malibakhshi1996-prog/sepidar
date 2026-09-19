@@ -3,10 +3,17 @@ import { isLeapJalaaliYear, isValidJalaaliDate, toGregorian, toJalaali } from 'j
 
 export interface JalaliDateValue { year: number; month: number; day: number }
 export type JalaliCalendarView = 'day' | 'week' | 'month'
+export type WeekStart = 'saturday' | 'sunday'
 export interface JalaliCalendarCell extends JalaliDateValue {
   key: string
   inRange: boolean
   weekday: number
+}
+export interface CalendarSystemCell extends JalaliCalendarCell {
+  displayYear: number
+  displayMonth: number
+  displayDay: number
+  displayMonthName: string
 }
 export const jalaliMonthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
 export const jalaliWeekdayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه']
@@ -34,17 +41,20 @@ export const parseJalaliInput = (input: string): JalaliDateValue | null => {
   const value = { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) }
   return isValidJalaaliDate(value.year, value.month, value.day) ? value : null
 }
-export const calendarRange = (anchor: JalaliDateValue, view: JalaliCalendarView) => {
+export const calendarRange = (anchor: JalaliDateValue, view: JalaliCalendarView, weekStart: WeekStart = 'saturday') => {
   if (view === 'day') return { from: anchor, to: anchor }
   if (view === 'week') {
-    const from = addJalaliDays(anchor, -jalaliWeekday(anchor))
+    const offset = weekStart === 'sunday' ? (jalaliWeekday(anchor) + 6) % 7 : jalaliWeekday(anchor)
+    const from = addJalaliDays(anchor, -offset)
     return { from, to: addJalaliDays(from, 6) }
   }
-  const from = addJalaliDays({ year: anchor.year, month: anchor.month, day: 1 }, -jalaliWeekday({ year: anchor.year, month: anchor.month, day: 1 }))
+  const first = { year: anchor.year, month: anchor.month, day: 1 }
+  const offset = weekStart === 'sunday' ? (jalaliWeekday(first) + 6) % 7 : jalaliWeekday(first)
+  const from = addJalaliDays(first, -offset)
   return { from, to: addJalaliDays(from, 41) }
 }
-export const calendarCells = (anchor: JalaliDateValue, view: JalaliCalendarView): JalaliCalendarCell[] => {
-  const range = calendarRange(anchor, view)
+export const calendarCells = (anchor: JalaliDateValue, view: JalaliCalendarView, weekStart: WeekStart = 'saturday'): JalaliCalendarCell[] => {
+  const range = calendarRange(anchor, view, weekStart)
   const count = view === 'day' ? 1 : view === 'week' ? 7 : 42
   return Array.from({ length: count }, (_, index) => {
     const value = addJalaliDays(range.from, index)
@@ -77,7 +87,7 @@ const gregorianDateForJalali = (value: JalaliDateValue) => {
   return new Date(Date.UTC(result.gy, result.gm - 1, result.gd, 12))
 }
 
-const hijriPartsForGregorian = (value: { year: number; month: number; day: number }) => {
+export const hijriPartsForGregorian = (value: { year: number; month: number; day: number }) => {
   const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura-nu-latn', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }).formatToParts(new Date(Date.UTC(value.year, value.month - 1, value.day, 12)))
   const part = (name: string) => Number(parts.find(item => item.type === name)?.value || 0)
   return { year: part('year'), month: part('month'), day: part('day') }
@@ -119,8 +129,89 @@ const julianDayToGregorian = (julianDay: number) => {
   return { year, month, day }
 }
 
-export const gregorianForHijri = (value: { year: number; month: number; day: number }) => julianDayToGregorian(islamicToJulianDay(value.year, value.month, value.day))
+export const gregorianForHijri = (value: { year: number; month: number; day: number }) => {
+  const approximate = julianDayToGregorian(islamicToJulianDay(value.year, value.month, value.day))
+  for (let offset = -5; offset <= 5; offset += 1) {
+    const candidate = new Date(Date.UTC(approximate.year, approximate.month - 1, approximate.day + offset, 12))
+    const gregorian = { year: candidate.getUTCFullYear(), month: candidate.getUTCMonth() + 1, day: candidate.getUTCDate() }
+    const parts = hijriPartsForGregorian(gregorian)
+    if (parts.year === value.year && parts.month === value.month && parts.day === value.day) return gregorian
+  }
+  return approximate
+}
 export const jalaliForHijri = (value: { year: number; month: number; day: number }) => jalaliForGregorian(gregorianForHijri(value))
+
+const displayPartsForJalali = (value: JalaliDateValue, system: CalendarSystem) => {
+  if (system === 'JALALI') return { year: value.year, month: value.month, day: value.day, monthName: jalaliMonthNames[value.month - 1] }
+  if (system === 'GREGORIAN') {
+    const date = gregorianForJalali(value)
+    return { year: date.year, month: date.month, day: date.day, monthName: gregorianMonthNames[date.month - 1] }
+  }
+  const date = hijriPartsForGregorian(gregorianForJalali(value))
+  return { year: date.year, month: date.month, day: date.day, monthName: hijriMonthNames[date.month - 1] }
+}
+
+const saturdayWeekday = (date: { year: number; month: number; day: number }) => (new Date(Date.UTC(date.year, date.month - 1, date.day)).getUTCDay() + 1) % 7
+const addGregorianDays = (date: { year: number; month: number; day: number }, amount: number) => {
+  const value = new Date(Date.UTC(date.year, date.month - 1, date.day + amount, 12))
+  return { year: value.getUTCFullYear(), month: value.getUTCMonth() + 1, day: value.getUTCDate() }
+}
+const gregorianDateForSystem = (value: JalaliDateValue, system: CalendarSystem) => {
+  if (system === 'GREGORIAN') return gregorianForJalali(value)
+  if (system === 'HIJRI') return gregorianForHijri(displayPartsForJalali(value, 'HIJRI'))
+  return gregorianForJalali(value)
+}
+
+export const calendarCellsForSystem = (anchor: JalaliDateValue, view: JalaliCalendarView, system: CalendarSystem, weekStart: WeekStart = 'saturday'): CalendarSystemCell[] => {
+  const displayAnchor = displayPartsForJalali(anchor, system)
+  const count = view === 'day' ? 1 : view === 'week' ? 7 : 42
+  let from: JalaliDateValue
+  if (view === 'day' || view === 'week') {
+    from = calendarRange(anchor, view, weekStart).from
+  } else if (system === 'JALALI') {
+    const first = { year: anchor.year, month: anchor.month, day: 1 }
+    const offset = weekStart === 'sunday' ? (jalaliWeekday(first) + 6) % 7 : jalaliWeekday(first)
+    from = addJalaliDays(first, -offset)
+  } else {
+    const firstGregorian = system === 'GREGORIAN'
+      ? (() => { const date = gregorianForJalali(anchor); return { year: date.year, month: date.month, day: 1 } })()
+      : gregorianForHijri({ year: displayAnchor.year, month: displayAnchor.month, day: 1 })
+    const weekday = saturdayWeekday(firstGregorian)
+    const offset = weekStart === 'sunday' ? (weekday + 6) % 7 : weekday
+    from = jalaliForGregorian(addGregorianDays(firstGregorian, -offset))
+  }
+  return Array.from({ length: count }, (_, index) => {
+    const value = addJalaliDays(from, index)
+    const display = displayPartsForJalali(value, system)
+    const inRange = view !== 'month' || (display.year === displayAnchor.year && display.month === displayAnchor.month)
+    return { ...value, key: jalaliKey(value), inRange, weekday: jalaliWeekday(value), displayYear: display.year, displayMonth: display.month, displayDay: display.day, displayMonthName: display.monthName }
+  })
+}
+
+export const moveCalendarForSystem = (anchor: JalaliDateValue, view: JalaliCalendarView, amount: number, system: CalendarSystem) => {
+  if (view === 'day') return addJalaliDays(anchor, amount)
+  if (view === 'week') return addJalaliDays(anchor, amount * 7)
+  if (system === 'JALALI') return addJalaliMonths({ ...anchor, day: 1 }, amount)
+  const display = displayPartsForJalali(anchor, system)
+  const total = display.year * 12 + (display.month - 1) + amount
+  const year = Math.floor(total / 12)
+  const month = total % 12 + 1
+  return system === 'GREGORIAN'
+    ? jalaliForGregorian({ year, month, day: 1 })
+    : jalaliForGregorian(gregorianForHijri({ year, month, day: 1 }))
+}
+
+export const calendarViewLabelForSystem = (anchor: JalaliDateValue, view: JalaliCalendarView, system: CalendarSystem, weekStart: WeekStart = 'saturday') => {
+  const cells = calendarCellsForSystem(anchor, view, system, weekStart)
+  const display = displayPartsForJalali(anchor, system)
+  if (view === 'month') return `${display.monthName} ${faDigits(display.year)}`
+  if (view === 'day') return `${faDigits(display.day)} ${display.monthName} ${faDigits(display.year)}`
+  const first = displayPartsForJalali(parseJalaliKey(cells[0].key) || anchor, system)
+  const last = displayPartsForJalali(parseJalaliKey(cells[cells.length - 1].key) || anchor, system)
+  return first.month === last.month && first.year === last.year
+    ? `${faDigits(first.day)} تا ${faDigits(last.day)} ${first.monthName} ${faDigits(first.year)}`
+    : `${faDigits(first.day)} ${first.monthName} تا ${faDigits(last.day)} ${last.monthName}`
+}
 
 export const formatCalendarInput = (value: JalaliDateValue, system: CalendarSystem) => {
   if (system === 'JALALI') return `${value.year}/${String(value.month).padStart(2, '0')}/${String(value.day).padStart(2, '0')}`
